@@ -220,21 +220,53 @@ module.exports = withSentryConfig(moduleExports);
 
 In that case you can also skip the `sentry-cli` configuration step below.
 
-### Automatically Instrument API Routes And Data Fetching Methods
+### Disable Automatic Instrumentation of API Routes And Data Fetching Methods
 
 _(New in version TODO)_
 
-The SDK provides an option to automatically instrument API routes and serverside [Next.js Data Fetching Methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring, removing the need to manually wrap API routes in `withSentry`.
+The SDK will automatically instrument API routes and serverside [Next.js Data Fetching Methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and performance monitoring To turn it off, set the `autoInstrumentServerFunctions` to `false`.
 
 ```javascript {filename:next.config.js}
 const moduleExports = {
   sentry: {
-    autoInstrumentServerFunctions: true,
+    autoInstrumentServerFunctions: false,
   },
 };
 ```
 
-Under the hood, the SDK is using a Webpack loader to wrap all your API route handlers and data fetching methods.
+Under the hood, when using this option, the SDK is utilizing a Webpack loader to wrap all your API route handlers and data fetching methods.
+
+In case the automatic instrumentation does not work for your use-case, API routes can also be wrapped manually using the `withSentry` function.
+
+```javascript {filename:pages/api/*}
+import { withSentry } from "@sentry/nextjs";
+
+const handler = (req, res) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next"
+import { withSentry } from "@sentry/nextjs";
+
+const handler = (req: NextApiRequest, res: NextApiResponse) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default withSentry(handler);
+```
+
+Data Fetching Methods can also be manually wrapped using the following functions:
+
+- `withSentryServerSideGetInitialProps` for `getInitialProps`
+- `withSentryGetServerSideProps` for `getServerSideProps`
+- `withSentryGetStaticProps` for `getStaticProps`
+- `withSentryServerSideErrorGetInitialProps` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
+- `withSentryServerSideAppGetInitialProps` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
+- `withSentryServerSideDocumentGetInitialProps` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
 
 In case the automatic instrumentation does not work for your use case, API routes can also be wrapped manually using the `withSentry` function.
 
